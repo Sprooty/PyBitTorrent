@@ -3,8 +3,12 @@ import socket
 import time
 from threading import Thread
 from typing import List
+from PyBitTorrent.torwoldTrackerdb import check_record_exists
+from PyBitTorrent.torwoldTrackerdb import insert_into_ips_table
+from PyBitTorrent.torwoldTrackerdb import insert_torrent_name
+from PyBitTorrent.torwoldTrackerdb import insert_into_torrent_ips_table
+from PyBitTorrent.torwoldTrackerdb import insert_into_torrents_table
 
-from rich import progress
 
 from PyBitTorrent import Utils
 from PyBitTorrent.Block import BlockStatus
@@ -35,9 +39,10 @@ from PyBitTorrent.TrackerFactory import TrackerFactory
 from PyBitTorrent.TrackerManager import TrackerManager
 from PyBitTorrent.Utils import generate_peer_id, read_peers_from_file
 
+
 LISTENING_PORT = 6881
 MAX_LISTENING_PORT = 6889
-MAX_PEERS = 12
+MAX_PEERS = 2000
 REQUEST_INTERVAL = 0.2
 ITERATION_SLEEP_INTERVAL = 0.001
 LOGGING_NONE = 100
@@ -67,6 +72,8 @@ class TorrentClient:
 
         # decode the config file and assign it
         self.torrent = TorrentFile(torrent)
+        logging.getLogger("BitTorrent").info(f"FILE NAME {self.torrent.file_name}")
+        print(self.torrent.file_name)
         self.piece_manager = DiskManager(output_dir, self.torrent)
         # create tracker for each url of tracker in the config file
         trackers = []
@@ -98,18 +105,53 @@ class TorrentClient:
 
         logging.getLogger("BitTorrent").info(f"Number of peers: {len(peers)}")
 
+        
         self.peer_manager.add_peers(peers)
         handshakes = Thread(
             target=self.peer_manager.send_handshakes, args=(self.id, self.torrent.hash)
         )
         requester = Thread(target=self.piece_requester)
 
+        # Assuming self.peer_manager is an instance of PeersManager and is accessible in this scope
+
+        # Get all IP values from peers
+        all_ips = self.peer_manager.get_all_ips()
+        logging.getLogger("BitTorrent").info(f"ALL IPS {all_ips}")
+
+        # # Loop through each IP and check if it exists in the database, insert if it doesn't
+        # for ip in all_ips:
+        #     if not check_record_exists('IPs', f"ip = '{ip}'"):
+        #         # IP does not exist, so insert it
+        #         insert_into_ips_table(ip, 'NULL')  # Ensure 'NULL' is appropriate for your database schema
+        #         logging.getLogger("BitTorrent").info(f'Inserted new IP into the database: {ip}')
+        #     else:
+        #         # IP already exists
+        #         logging.getLogger("BitTorrent").info(f'This IP already exists in the database: {ip}')
+
+     
+        # Insert the torrent information and retrieve the TorrentID
+        torrent_id = insert_into_torrents_table(self.torrent.file_name)
+        
+        # Loop through each IP
+        for ip in all_ips:
+         # Insert or update IP information
+         insert_into_ips_table(ip)  # Assuming country is unknown or handled elsewhere
+
+         # Insert or update the relationship between the torrent and the IP
+        for ip in all_ips:
+            insert_into_torrent_ips_table(torrent_id, ip)
+
+
+        logging.getLogger("BitTorrent").info(f'Processed IP: {ip}')
         handshakes.start()
         requester.start()
         self.progress_download()
         handshakes.join()
         requester.join()
         Utils.console.print("[green]GoodBye!")
+        
+
+        
 
     def progress_download(self):
         if self.use_progress_bar:

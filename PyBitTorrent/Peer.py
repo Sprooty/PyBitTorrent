@@ -13,6 +13,7 @@ from PyBitTorrent.Exceptions import (
 from PyBitTorrent.Message import Message, Handshake, BitField, HaveMessage
 from PyBitTorrent.MessageFactory import MessageFactory
 
+
 HANDSHAKE_STRIPPED_SIZE = 48
 
 
@@ -25,6 +26,17 @@ class Peer:
         self.handshake = None  # Handshake still have not happened
         self.is_choked = True  # By default the client is choked
         self.bitfield: BitArray = BitArray()
+
+        # Log the IP
+        logging.getLogger("BitTorrent").info(f"New peer instance created with IP: {self.ip}")
+        
+        """ if not check_record_exists('IPs', f"ip = '{self.ip}'"):
+            # IP does not exist, so insert it
+            insert_into_ips_table(ip, 'NULL')
+            logging.getLogger("BitTorrent").info(f'Inserted new IP into the database: {self.ip}')
+        else:
+            # IP already exists
+            logging.getLogger("BitTorrent").info(f'This IP already exists in the database: {self.ip}') """
 
         if type(ipaddress.ip_address(ip)) is ipaddress.IPv6Address:
             self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)

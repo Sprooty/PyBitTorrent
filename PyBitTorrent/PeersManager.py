@@ -61,16 +61,29 @@ class PeersManager:
             return
         try:
             # Send the handshake to peer
-            logging.getLogger('BitTorrent').info(f'Trying handshake with peer {peer.ip}')
+            # ...
 
-            peer.do_handshake(my_id, info_hash)
+                        logging.getLogger('BitTorrent').info(f'Trying handshake with peer {peer.ip}')
 
-            # Consider it as connected client
-            self.connected_peers.append(peer)
+                        peer.do_handshake(my_id, info_hash)
 
-            logging.getLogger("BitTorrent").debug(
-                f"Adding peer {peer} which is {len(self.connected_peers)}/{self.max_peers}"
-            )
+                        # Consider it as connected client
+                        self.connected_peers.append(peer)
+
+                        """# Function to insert IP into IPs table
+                        def insert_ip_if_not_exists(ip):
+                            # Check if IP already exists in the table
+                            if not check_record_exists('ips_table', f"ip = '{ip}'"):
+                                # IP does not exist, so insert it
+                                insert_into_ips_table(ip, 'NULL')
+                                logging.getLogger(f'Inserted new IP into the database: {ip}')
+                            else:
+                                # IP already exists
+                                 logging.getLogger(f'This IP already exists in the database: {ip}')
+                         """
+                        logging.getLogger("BitTorrent").debug(
+                            f"Adding peer {peer} which is {len(self.connected_peers)}/{self.max_peers}"
+                        )
 
         except (PeerHandshakeFailed, PeerDisconnected, socket.error):
             pass
@@ -178,6 +191,10 @@ class PeersManager:
 
         # If we reached so far... then no peer founded
         raise NoPeersHavePiece
+
+    def get_all_ips(self):
+        return [peer.ip for peer in self.peers]
+    
 
     @property
     def num_of_unchoked(self):

@@ -11,7 +11,6 @@ setup(
     author_email='gefen102@gmail.com',
     url="https://github.com/gaffner/PyBitTorrent",
     packages=['PyBitTorrent'],
-    licence='LICENSE.txt',
     description='Download torrent files according to BitTorrent specifications',
     long_description=long_description,
     long_description_content_type="text/markdown",
