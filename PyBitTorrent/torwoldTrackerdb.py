@@ -144,3 +144,62 @@ def insert_enriched_ip_data(ip, country, country_code, region, city, latitude, l
     cursor.close()
     connection.close()
 
+def get_ip_geolocation_data():
+    connection = get_connection()  # Reuse your existing database connection function
+    cursor = connection.cursor()
+
+    # Define your SELECT query - adjust fields and table name as per your database schema
+    query = """
+    SELECT IP, Country, CountryCode, Region, City, Latitude, Longitude, Timezone, ISP, ASDescription, Org
+    FROM IPs
+    WHERE Latitude IS NOT NULL AND Longitude IS NOT NULL;
+    """
+
+    # Execute the query
+    cursor.execute(query)
+
+    # Fetch all the results
+    results = cursor.fetchall()
+
+    # Close the cursor and the connection
+    cursor.close()
+    connection.close()
+
+    return results
+
+
+# Modify your get_ip_geolocation_data function to return dictionaries
+def get_ip_geolocation_data2():
+    connection = get_connection()  # Make sure this gets your DB connection
+    cursor = connection.cursor()
+
+    query = """
+    SELECT IP, Country, CountryCode, Region, City, Latitude, Longitude, Timezone, ISP, ASDescription, Org
+    FROM IPs
+    """
+
+    cursor.execute(query)
+    data = cursor.fetchall()
+
+    # Convert the data to a list of dictionaries
+    result = []
+    for row in data:
+        ip_data = {
+            'IP': row[0],
+            'Country': row[1],
+            'CountryCode': row[2],
+            'Region': row[3],
+            'City': row[4],
+            'Latitude': row[5],
+            'Longitude': row[6],
+            'Timezone': row[7],
+            'ISP': row[8],
+            'ASDescription': row[9],
+            'Org': row[10]
+        }
+        result.append(ip_data)
+
+    cursor.close()
+    connection.close()
+
+    return result

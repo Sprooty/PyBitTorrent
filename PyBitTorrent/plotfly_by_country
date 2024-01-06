@@ -1,0 +1,136 @@
+import json
+import requests
+import logging
+import plotly.graph_objs as go
+from torwoldTrackerdb import get_ip_geolocation_data2  # Importing from the other file
+from geopy.geocoders import Nominatim
+
+import json
+import requests
+import logging
+import plotly.graph_objs as go
+from torwoldTrackerdb import get_ip_geolocation_data2  # Importing from the other file
+from geopy.geocoders import Nominatim
+
+geolocator = Nominatim(user_agent="geoapiExercises")
+
+# File path to store cached coordinates
+cache_file = "country_coordinates_cache.json"
+
+# Load cached coordinates if available
+try:
+    with open(cache_file, "r") as f:
+        country_coordinates = json.load(f)
+except FileNotFoundError:
+    country_coordinates = {}
+
+def save_cache():
+    # Save cached coordinates to the file
+    with open(cache_file, "w") as f:
+        json.dump(country_coordinates, f)
+
+def get_country_coordinates(country):
+    try:
+        if country not in country_coordinates:
+            location = geolocator.geocode(country)
+            if location:
+                country_coordinates[country] = (location.latitude, location.longitude)
+                save_cache()  # Save to cache after fetching
+            else:
+                country_coordinates[country] = None
+        return country_coordinates[country]
+    except Exception as e:
+        logging.error(f"Error while geocoding {country}: {str(e)}")
+        return None
+
+# Rest of your code...
+
+
+def main():
+    # Configure logging
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+    # Retrieve the IP geolocation data
+    logging.info("Retrieving IP geolocation data...")
+    try:
+        ip_data = get_ip_geolocation_data2()  # You can use your database query function here
+        logging.info(f"Retrieved data for {len(ip_data)} IP locations.")
+    except Exception as e:
+        logging.error(f"Error while retrieving IP geolocation data: {str(e)}")
+        return
+
+    # Create a dictionary to group data by country
+    country_data = {}
+    for data in ip_data:
+        country = data.get('Country')
+        if country:
+            if country not in country_data:
+                country_data[country] = {'count': 0, 'coords': get_country_coordinates(country)}
+            country_data[country]['count'] += 1
+
+    # Create a scatter geo plot
+    lats = [data['coords'][0] for data in country_data.values() if data['coords']]
+    lons = [data['coords'][1] for data in country_data.values() if data['coords']]
+    text = [f"{country} - {data['count']} IPs" for country, data in country_data.items() if data['coords']]
+
+    # Calculate dot size based on the count of IPs (adjust as needed)
+    dot_sizes = [data['count'] for country, data in country_data.items() if data['coords']]
+
+    fig = go.Figure(data=go.Scattergeo(
+        lon=lons,
+        lat=lats,
+        text=text,
+        mode='markers',
+        marker=dict(
+            size=dot_sizes,  # Set dot sizes based on the count of IPs
+            opacity=0.8,
+            reversescale=True,
+            autocolorscale=False,
+            symbol='circle',
+            line=dict(
+                width=1,
+                color='rgba(102, 102, 102)'
+            ),
+            colorscale='Viridis',
+            cmin=0,
+            color=lats,
+            colorbar_title="Some metric"
+        )))
+
+    # Update the layout to add map configurations
+    fig.update_layout(
+        title='IP Locations Worldwide',
+        geo=dict(
+            scope='world',
+            showland=True,
+            landcolor="rgb(212, 212, 212)",
+            subunitcolor="rgb(255, 255, 255)",
+            countrycolor="rgb(255, 255, 255)",
+            showlakes=True,
+            lakecolor="rgb(255, 255, 255)",
+            showsubunits=True,
+            showcountries=True,
+            resolution=50,
+            projection=dict(
+                type='mercator'
+            ),
+            lonaxis=dict(
+                showgrid=True,
+                gridwidth=0.5,
+                range=[-180.0, 180.0],
+                dtick=5
+            ),
+            lataxis=dict(
+                showgrid=True,
+                gridwidth=0.5,
+                range=[-90.0, 90.0],
+                dtick=5
+            )
+        )
+    )
+
+    # Show the figure
+    fig.show()
+
+if __name__ == "__main__":
+    main()

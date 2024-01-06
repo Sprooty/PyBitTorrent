@@ -1,0 +1,70 @@
+import plotly.graph_objs as go
+from torwoldTrackerdb import get_ip_geolocation_data  # Importing from the other file
+
+def main():
+    # Retrieve IP geolocation data from the database
+    ip_data = get_ip_geolocation_data()
+
+    # Extracting latitude, longitude, and hover text
+    lats = [data[5] for data in ip_data]  # Assuming latitude is the 5th column in the result
+    lons = [data[6] for data in ip_data]  # Assuming longitude is the 6th column in the result
+    text = [f"{data[0]} - {data[3]}" for data in ip_data]  # Assuming IP is the 1st column and city is the 4th column
+    print("Latitude Data:", lats)
+    print("Longitude Data:", lons)
+
+    # Create a scatter geo plot
+    fig = go.Figure(data=go.Scattergeo(
+    lon = lons,
+    lat = lats,
+    text = text,
+    mode = 'markers',
+    marker = dict(
+        size = 8,
+        opacity = 0.8,
+        reversescale = True,
+        autocolorscale = False,
+        symbol = 'circle',
+        line = dict(
+            width=1,
+            color='rgba(102, 102, 102)'
+        ),
+        color = 'blue',  # Assigning a single color to all markers
+    )))
+
+    # Update the layout to add map configurations
+    fig.update_layout(
+        title = 'IP Locations Worldwide',
+        geo = dict(
+            scope = 'world',
+            showland = True,
+            landcolor = "rgb(212, 212, 212)",
+            subunitcolor = "rgb(255, 255, 255)",
+            countrycolor = "rgb(255, 255, 255)",
+            showlakes = True,
+            lakecolor = "rgb(255, 255, 255)",
+            showsubunits = True,
+            showcountries = True,
+            resolution = 50,
+            projection = dict(
+                type = 'mercator'
+            ),
+            lonaxis = dict(
+                showgrid = True,
+                gridwidth = 0.5,
+                range= [ -180.0, 180.0 ],
+                dtick = 5
+            ),
+            lataxis = dict (
+                showgrid = True,
+                gridwidth = 0.5,
+                range= [ -90.0, 90.0 ],
+                dtick = 5
+            )
+        )
+    )
+
+    # Show the figure
+    fig.show()
+
+if __name__ == "__main__":
+    main()
