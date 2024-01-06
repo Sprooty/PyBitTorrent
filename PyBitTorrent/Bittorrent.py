@@ -3,9 +3,7 @@ import socket
 import time
 from threading import Thread
 from typing import List
-from PyBitTorrent.torwoldTrackerdb import check_record_exists
 from PyBitTorrent.torwoldTrackerdb import insert_into_ips_table
-from PyBitTorrent.torwoldTrackerdb import insert_torrent_name
 from PyBitTorrent.torwoldTrackerdb import insert_into_torrent_ips_table
 from PyBitTorrent.torwoldTrackerdb import insert_into_torrents_table
 
@@ -74,6 +72,7 @@ class TorrentClient:
         self.torrent = TorrentFile(torrent)
         logging.getLogger("BitTorrent").info(f"FILE NAME {self.torrent.file_name}")
         print(self.torrent.file_name)
+        logging.getLogger("BitTorrent").info(f"Infohash is {self.torrent.hash}")
         self.piece_manager = DiskManager(output_dir, self.torrent)
         # create tracker for each url of tracker in the config file
         trackers = []
@@ -130,7 +129,7 @@ class TorrentClient:
 
      
         # Insert the torrent information and retrieve the TorrentID
-        torrent_id = insert_into_torrents_table(self.torrent.file_name)
+        torrent_id = insert_into_torrents_table(self.torrent.file_name,self.torrent.hash)
         
         # Loop through each IP
         for ip in all_ips:
@@ -142,12 +141,12 @@ class TorrentClient:
             insert_into_torrent_ips_table(torrent_id, ip)
 
 
-        logging.getLogger("BitTorrent").info(f'Processed IP: {ip}')
-        handshakes.start()
-        requester.start()
-        self.progress_download()
-        handshakes.join()
-        requester.join()
+        #logging.getLogger("BitTorrent").info(f'Processed IP: {ip}')
+        #handshakes.start()
+        #requester.start()
+        #self.progress_download()
+        #handshakes.join()
+        #requester.join()
         Utils.console.print("[green]GoodBye!")
         
 

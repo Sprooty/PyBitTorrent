@@ -71,17 +71,17 @@ def insert_into_ips_table(ip, country=None):
     cursor.close()
     connection.close()
 
-def insert_torrent_name(torrent_name):
+def insert_torrent_info(torrent_name, info_hash=None):
     connection = get_connection()
     cursor = connection.cursor()
 
     # Prepare the query. Note that TorrentID is not included in the columns list as it auto-increments.
     query = """INSERT INTO Torrents (TorrentName, InfoHash, MagnetLink, Site, Category, DateInserted)
-               VALUES (%s, NULL, NULL, NULL, NULL, NULL)
+               VALUES (%s, %s, NULL, NULL, NULL, NULL)
                ON DUPLICATE KEY UPDATE TorrentName = VALUES(TorrentName)"""
     
-    # Execute the query. Only torrent_name is provided, others are set to NULL.
-    cursor.execute(query, (torrent_name,))
+    # Execute the query. Set info_hash to None if not provided.
+    cursor.execute(query, (torrent_name, info_hash))
     
     # Commit and close connection
     connection.commit()
@@ -105,3 +105,42 @@ def insert_into_torrent_ips_table(torrent_id, ip):
     connection.commit()
     cursor.close()
     connection.close()
+
+def get_null_country_ips():
+    connection = get_connection()
+    cursor = connection.cursor()
+    query = "SELECT IP FROM IPs WHERE Country IS NULL"
+    cursor.execute(query)
+    ips = [item[0] for item in cursor.fetchall()]
+    cursor.close()
+    connection.close()
+    return ips
+
+
+def insert_enriched_ip_data(ip, country, country_code, region, city, latitude, longitude, timezone, isp, as_description, org):
+    connection = get_connection()  # Make sure this gets your DB connection
+    cursor = connection.cursor()
+
+    query = """
+    INSERT INTO IPs (IP, Country, CountryCode, Region, City, Latitude, Longitude, Timezone, ISP, ASDescription, Org)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ON DUPLICATE KEY UPDATE 
+        Country = VALUES(Country), 
+        CountryCode = VALUES(CountryCode),
+        Region = VALUES(Region),
+        City = VALUES(City),
+        Latitude = VALUES(Latitude),
+        Longitude = VALUES(Longitude),
+        Timezone = VALUES(Timezone),
+        ISP = VALUES(ISP),
+        ASDescription = VALUES(ASDescription),
+        Org = VALUES(Org)
+    """
+
+    data = (ip, country, country_code, region, city, latitude, longitude, timezone, isp, as_description, org)
+
+    cursor.execute(query, data)
+    connection.commit()
+    cursor.close()
+    connection.close()
+
