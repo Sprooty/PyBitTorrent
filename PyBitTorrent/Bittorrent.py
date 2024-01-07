@@ -38,12 +38,41 @@ from PyBitTorrent.TrackerManager import TrackerManager
 from PyBitTorrent.Utils import generate_peer_id, read_peers_from_file
 
 
-LISTENING_PORT = 6881
-MAX_LISTENING_PORT = 6889
-MAX_PEERS = 2000
+LISTENING_PORT = 43706
+MAX_LISTENING_PORT = 43706
+MAX_PEERS = 20000
 REQUEST_INTERVAL = 0.2
 ITERATION_SLEEP_INTERVAL = 0.001
 LOGGING_NONE = 100
+
+
+DEFAULT_TRACKER_URLS = [
+    "udp://tracker.coppersurfer.tk:6969/announce",
+    "udp://9.rarbg.to:2920/announce",
+    "udp://tracker.opentrackr.org:1337",
+    "udp://tracker.internetwarriors.net:1337/announce",
+    "udp://tracker.leechers-paradise.org:6969/announce",
+    "udp://tracker.coppersurfer.tk:6969/announce",
+    "udp://tracker.pirateparty.gr:6969/announce",
+    "udp://tracker.cyberia.is:6969/announce"
+    "udp://47.ip-51-68-199.eu:6969/announce",
+    "udp://9.rarbg.me:2780/announce",
+    "udp://9.rarbg.to:2710/announce",
+    "udp://9.rarbg.to:2730/announce",
+    "udp://9.rarbg.to:2920/announce",
+    "udp://open.stealth.si:80/announce",
+    "udp://opentracker.i2p.rocks:6969/announce",
+    "udp://tracker.coppersurfer.tk:6969/announce",
+    "udp://tracker.cyberia.is:6969/announce",
+    "udp://tracker.dler.org:6969/announce",
+    "udp://tracker.internetwarriors.net:1337/announce",
+    "udp://tracker.leechers-paradise.org:6969/announce",
+    "udp://tracker.openbittorrent.com:6969/announce",
+    "udp://tracker.opentrackr.org:1337",
+    "udp://tracker.pirateparty.gr:6969/announce",
+    "udp://tracker.tiny-vps.com:6969/announce",
+    "udp://tracker.torrent.eu.org:451/announce"
+    ]
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
@@ -85,6 +114,12 @@ class TorrentClient:
                 self.torrent.config["announce-list"]
             )
             trackers += new_trackers
+
+         # If no trackers were added, use the default list
+        if not trackers:
+            for url in DEFAULT_TRACKER_URLS:
+                tracker = TrackerFactory.create_tracker(url)
+                trackers.append(tracker)    
 
         self.tracker_manager = TrackerManager(trackers)
         file_size, piece_size = self.torrent.length, self.torrent.piece_size

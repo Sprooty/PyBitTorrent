@@ -1,0 +1,25 @@
+import libtorrent as lt
+
+def generate_torrent(magnet_url, output_file):
+    try:
+        # Create a session
+        ses = lt.session()
+
+        # Add a torrent from the magnet URL
+        info = lt.parse_magnet_uri(magnet_url)
+        handle = ses.add_torrent({"ti": info})
+
+        # Create and save the .torrent file
+        torrent_info = handle.get_torrent_info()
+        with open(output_file, "wb") as f:
+            f.write(lt.bencode(torrent_info.generate()))
+        
+        print(f"Torrent file saved as {output_file}")
+    
+    except Exception as e:
+        print(f"Error: {str(e)}")
+
+if __name__ == "__main__":
+    magnet_url = "magnet:?xt=urn:btih:EC34C231DDE3E92D8D26A17C223152C8541295AA"
+    output_file = "output.torrent"
+    generate_torrent(magnet_url, output_file)
