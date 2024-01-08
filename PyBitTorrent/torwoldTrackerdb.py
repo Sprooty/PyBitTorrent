@@ -12,9 +12,9 @@ DB_CONFIG = {
     'host': '192.168.0.10',
     'user': 'root',
     'password': 'JJntJGHtgRsZGUwDmoknfGV4',
-    'database': 'torworldTracker',
+    'database': 'trackertracker',
     'port': '32768',
-    'pool_name': 'torrentmapper_pool',
+    'pool_name': 'trackertracker_pool',
     'pool_size': 32
 }
 
