@@ -1,0 +1,102 @@
+import plotly.express as px  # Ensure this import is here
+import json
+import requests
+import logging
+import plotly.graph_objs as go  # Ensure this import is here
+from torwoldTrackerdb import get_ip_geolocation_data2  # Ensure this is your correct module path
+from geopy.geocoders import Nominatim
+
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+geolocator = Nominatim(user_agent="geoapiExercises")
+
+# File path to store cached coordinates
+cache_file = "country_coordinates_cache.json"
+
+# Attempt to load cached coordinates if available
+try:
+    with open(cache_file, "r") as f:
+        country_coordinates = json.load(f)
+    logging.info(f"Loaded cached country coordinates successfully.")
+except FileNotFoundError:
+    country_coordinates = {}
+    logging.warning(f"No cache file found. Starting with an empty cache.")
+
+def save_cache():
+    try:
+        with open(cache_file, "w") as f:
+            json.dump(country_coordinates, f)
+        logging.info(f"Country coordinates cache saved.")
+    except Exception as e:
+        logging.error(f"Error saving cache: {str(e)}")
+
+def get_country_coordinates(country):
+    try:
+        if country not in country_coordinates:
+            logging.info(f"Fetching coordinates for {country}")
+            location = geolocator.geocode(country)
+            if location:
+                country_coordinates[country] = (location.latitude, location.longitude)
+                save_cache()  # Save to cache after fetching
+                logging.info(f"Coordinates for {country} fetched and cached.")
+            else:
+                country_coordinates[country] = None
+                logging.warning(f"No coordinates found for {country}.")
+        else:
+            logging.info(f"Using cached coordinates for {country}.")
+        return country_coordinates[country]
+    except Exception as e:
+        logging.error(f"Error while geocoding {country}: {str(e)}")
+        return None
+
+def main():
+    logging.info("Starting IP geolocation data retrieval and processing...")
+
+    # Retrieve the IP geolocation data
+    try:
+        ip_data = get_ip_geolocation_data2()  # Make sure this function returns the expected data format
+        logging.info(f"Retrieved data for {len(ip_data)} IP locations.")
+    except Exception as e:
+        logging.error(f"Error while retrieving IP geolocation data: {str(e)}")
+        return  # Exit if data retrieval fails
+
+    # Process and group data by country
+    country_counts = {}
+    for data in ip_data:
+        country = data.get('Country')
+        if country:
+            country_counts[country] = country_counts.get(country, 0) + 1
+
+    # Prepare data for choropleth
+    countries = list(country_counts.keys())
+    counts = list(country_counts.values())
+
+    # Create a DataFrame for plotly (if you haven't already imported pandas, do so)
+    import pandas as pd
+    df = pd.DataFrame({'Country': countries, 'Count': counts})
+
+    # Create a choropleth map
+    fig = px.choropleth(df,
+                        locations="Country",
+                        locationmode="country names",  # or use "ISO-3" if your country data is in ISO-3 format
+                        color="Count",
+                        hover_name="Country",
+                        color_continuous_scale=px.colors.sequential.Plasma)
+
+    # Update the layout to add map configurations and title
+    fig.update_layout(
+        title_text='IP Locations Worldwide by Country',
+        geo=dict(
+            showframe=False,
+            showcoastlines=False,
+            projection_type='equirectangular'
+        )
+    )
+
+    logging.info("Displaying choropleth map.")
+    fig.show()
+
+if __name__ == "__main__":
+    main()

@@ -6,6 +6,7 @@ from typing import List
 from PyBitTorrent.torwoldTrackerdb import insert_into_ips_table
 from PyBitTorrent.torwoldTrackerdb import insert_into_torrent_ips_table
 from PyBitTorrent.torwoldTrackerdb import insert_into_torrents_table
+from PyBitTorrent.torwoldTrackerdb import search_infohash
 
 
 from PyBitTorrent import Utils
@@ -103,7 +104,35 @@ class TorrentClient:
         print(self.torrent.file_name)
         logging.getLogger("BitTorrent").info(f"Infohash is {self.torrent.hash}")
         self.piece_manager = DiskManager(output_dir, self.torrent)
-        # create tracker for each url of tracker in the config file
+
+
+        logging.getLogger("BitTorrent").info(f"CHECKING IF EXISTS IN DB")
+        # This could be set based on a configuration file, command-line argument, or some other means
+        check_infohash_existence = True  # Set this to False to disable checking
+
+        self.torrent = TorrentFile(torrent)
+        logging.getLogger("BitTorrent").info(f"FILE NAME {self.torrent.file_name}")
+        print(self.torrent.file_name)
+        logging.getLogger("BitTorrent").info(f"Infohash is {self.torrent.hash}")
+
+                # Before initiating the check
+        if check_infohash_existence:
+            logging.info(f"Checking for existence of info_hash: {self.torrent.hash}")
+
+            try:
+                existing_torrent = search_infohash(self.torrent.hash)
+                if existing_torrent:
+                    logging.info(f"Infohash {self.torrent.hash} already exists in the database with details: {existing_torrent}. Skipping insertion.")
+                    return  # Skip further processing or adjust as needed
+                else:
+                    logging.info(f"Infohash {self.torrent.hash} does not exist in the database. Proceeding with insertion.")
+
+            except Exception as e:
+                logging.error(f"Error occurred while checking for info_hash: {e}")
+
+        self.piece_manager = DiskManager(output_dir, self.torrent)
+        # ... [rest of your code for creating trackers and so on] ..
+                # create tracker for each url of tracker in the config file
         trackers = []
         if "announce" in self.torrent.config:
             tracker = TrackerFactory.create_tracker(self.torrent.config["announce"])

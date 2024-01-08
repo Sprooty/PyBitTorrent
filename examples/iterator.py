@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Configuration
 torrent_directory = r'C:\Syncthing\Personal\Git\PyBitTorrent\examples\torrents'
 output_directory = r'C:\Syncthing\Personal\Git\PyBitTorrent\examples\download'
-max_instances = 25
+max_instances = 1
 
 def run_torrent_client(torrent_file):
     command = [

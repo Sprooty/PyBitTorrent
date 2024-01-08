@@ -1,88 +1,95 @@
 import json
 import requests
 import logging
-import plotly.graph_objs as go
-from torwoldTrackerdb import get_ip_geolocation_data2  # Importing from the other file
+import plotly.graph_objs as go  # Ensure this import is here
+from torwoldTrackerdb import get_ip_geolocation_data2  # Ensure this is your correct module path
 from geopy.geocoders import Nominatim
 
-import json
-import requests
-import logging
-import plotly.graph_objs as go
-from torwoldTrackerdb import get_ip_geolocation_data2  # Importing from the other file
-from geopy.geocoders import Nominatim
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 geolocator = Nominatim(user_agent="geoapiExercises")
 
 # File path to store cached coordinates
 cache_file = "country_coordinates_cache.json"
 
-# Load cached coordinates if available
+# Attempt to load cached coordinates if available
 try:
     with open(cache_file, "r") as f:
         country_coordinates = json.load(f)
+    logging.info(f"Loaded cached country coordinates successfully.")
 except FileNotFoundError:
     country_coordinates = {}
+    logging.warning(f"No cache file found. Starting with an empty cache.")
 
 def save_cache():
-    # Save cached coordinates to the file
-    with open(cache_file, "w") as f:
-        json.dump(country_coordinates, f)
+    try:
+        with open(cache_file, "w") as f:
+            json.dump(country_coordinates, f)
+        logging.info(f"Country coordinates cache saved.")
+    except Exception as e:
+        logging.error(f"Error saving cache: {str(e)}")
 
 def get_country_coordinates(country):
     try:
         if country not in country_coordinates:
+            logging.info(f"Fetching coordinates for {country}")
             location = geolocator.geocode(country)
             if location:
                 country_coordinates[country] = (location.latitude, location.longitude)
                 save_cache()  # Save to cache after fetching
+                logging.info(f"Coordinates for {country} fetched and cached.")
             else:
                 country_coordinates[country] = None
+                logging.warning(f"No coordinates found for {country}.")
+        else:
+            logging.info(f"Using cached coordinates for {country}.")
         return country_coordinates[country]
     except Exception as e:
         logging.error(f"Error while geocoding {country}: {str(e)}")
         return None
 
-# Rest of your code...
-
 
 def main():
-    # Configure logging
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.info("Starting IP geolocation data retrieval and processing...")
 
     # Retrieve the IP geolocation data
-    logging.info("Retrieving IP geolocation data...")
     try:
-        ip_data = get_ip_geolocation_data2()  # You can use your database query function here
+        ip_data = get_ip_geolocation_data2()  # Make sure this function returns the expected data format
         logging.info(f"Retrieved data for {len(ip_data)} IP locations.")
     except Exception as e:
         logging.error(f"Error while retrieving IP geolocation data: {str(e)}")
-        return
+        return  # Exit if data retrieval fails
 
-    # Create a dictionary to group data by country
+    # Process and group data by country
     country_data = {}
     for data in ip_data:
         country = data.get('Country')
         if country:
             if country not in country_data:
-                country_data[country] = {'count': 0, 'coords': get_country_coordinates(country)}
+                coords = get_country_coordinates(country)
+                country_data[country] = {'count': 0, 'coords': coords}
             country_data[country]['count'] += 1
 
-    # Create a scatter geo plot
+    # Extract and prepare data for plotting
     lats = [data['coords'][0] for data in country_data.values() if data['coords']]
     lons = [data['coords'][1] for data in country_data.values() if data['coords']]
     text = [f"{country} - {data['count']} IPs" for country, data in country_data.items() if data['coords']]
-
     # Calculate dot size based on the count of IPs (adjust as needed)
-    dot_sizes = [data['count'] for country, data in country_data.items() if data['coords']]
+    dot_sizes = [1 * (data['count'] ** 0.5) for country, data in country_data.items() if data['coords']]  # Adjust 5 or the exponent as needed
 
+
+    logging.info(f"Preparing plot for {len(lats)} locations.")
+
+    # Create a scatter geo plot
     fig = go.Figure(data=go.Scattergeo(
         lon=lons,
         lat=lats,
         text=text,
         mode='markers',
         marker=dict(
-            size=dot_sizes,  # Set dot sizes based on the count of IPs
+            size=[size for size in dot_sizes],  # Set dot sizes based on the count of IPs
             opacity=0.8,
             reversescale=True,
             autocolorscale=False,
@@ -129,7 +136,7 @@ def main():
         )
     )
 
-    # Show the figure
+    logging.info("Displaying plot.")
     fig.show()
 
 if __name__ == "__main__":

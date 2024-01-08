@@ -7,6 +7,10 @@ from mysql.connector import pooling
 # logging.basicConfig(level=logging.DEBUG)
 # logger = logging.getLogger(__name__)
 
+# Ensure this logger's configuration is appropriate for your needs
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 # Database Configuration
 DB_CONFIG = {
     'host': '192.168.0.10',
@@ -118,12 +122,12 @@ def get_null_country_ips():
 
 
 def insert_enriched_ip_data(ip, country, country_code, region, city, latitude, longitude, timezone, isp, as_description, org):
-    connection = get_connection()  # Make sure this gets your DB connection
+    connection = get_connection()
     cursor = connection.cursor()
 
     query = """
-    INSERT INTO IPs (IP, Country, CountryCode, Region, City, Latitude, Longitude, Timezone, ISP, ASDescription, Org)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO IPs (IP, Country, CountryCode, Region, City, Latitude, Longitude, Timezone, ISP, ASDescription, Org, Enriched)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ON DUPLICATE KEY UPDATE 
         Country = VALUES(Country), 
         CountryCode = VALUES(CountryCode),
@@ -134,15 +138,22 @@ def insert_enriched_ip_data(ip, country, country_code, region, city, latitude, l
         Timezone = VALUES(Timezone),
         ISP = VALUES(ISP),
         ASDescription = VALUES(ASDescription),
-        Org = VALUES(Org)
+        Org = VALUES(Org),
+        Enriched = TRUE  # Ensure the 'Enriched' column is set to TRUE
     """
 
-    data = (ip, country, country_code, region, city, latitude, longitude, timezone, isp, as_description, org)
+    # Add 'Enriched' value (True or 1) to the data tuple
+    data = (ip, country, country_code, region, city, latitude, longitude, timezone, isp, as_description, org, True)
 
-    cursor.execute(query, data)
-    connection.commit()
-    cursor.close()
-    connection.close()
+    try:
+        cursor.execute(query, data)
+        connection.commit()
+    except Exception as e:
+        logging.error(f"Error inserting/updating data for IP {ip}: {e}")
+    finally:
+        cursor.close()
+        connection.close()
+
 
 def get_ip_geolocation_data():
     connection = get_connection()  # Reuse your existing database connection function
@@ -203,3 +214,57 @@ def get_ip_geolocation_data2():
     connection.close()
 
     return result
+
+def check_ip_enriched_status(ip):
+    connection = get_connection()  # Ensure this correctly fetches your database connection
+    cursor = connection.cursor()
+    
+    query = """
+    SELECT IP, Enriched
+    FROM IPs
+    WHERE IP = %s
+    """
+
+    # Log the query and the IP it's checking
+    logger.info(f"Executing query: {query.strip()} for IP: {ip}")
+
+    try:
+        cursor.execute(query, (ip,))
+        result = cursor.fetchone()
+    except Exception as e:
+        logger.error(f"Error executing query: {e}")
+        return False  # Or handle errors as appropriate for your context
+    finally:
+        cursor.close()
+        connection.close()
+
+    if result:
+        return {"IP": result[0], "Enriched": result[1]}
+    else:
+        return None  # or return a default value or error message
+    
+
+def search_infohash(info_hash):
+    connection = get_connection()
+    try:
+        cursor = connection.cursor(buffered=True)
+        query = "SELECT * FROM Torrents WHERE InfoHash = %s"
+        
+        logging.info(f"Executing query to search for InfoHash: {query}")
+        
+        cursor.execute(query, (info_hash,))
+        result = cursor.fetchone()  # Fetching the result
+        
+        if result:
+            logging.info(f"Found existing info_hash in database: {result}")
+        else:
+            logging.info("No existing info_hash found in database.")
+            
+        return result  # This will be None if no match is found
+        
+    except Exception as e:
+        logging.error(f"Error searching for info_hash {info_hash}: {e}")
+        return None
+    finally:
+        cursor.close()  # Ensure cursor is closed
+        connection.close()  # Ensure connection is closed
