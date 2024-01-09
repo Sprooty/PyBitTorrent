@@ -99,6 +99,7 @@ class TorrentClient:
         if use_progress_bar:
             logging.getLogger("BitTorrent").setLevel(LOGGING_NONE)
 
+        logging.getLogger("BitTorrent").info(f"OUTPUT DIR IS {output_dir}")
         # decode the config file and assign it
         self.torrent = TorrentFile(torrent)
         logging.getLogger("BitTorrent").info(f"FILE NAME {self.torrent.file_name}")

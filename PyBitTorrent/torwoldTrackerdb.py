@@ -19,7 +19,7 @@ DB_CONFIG = {
     'database': 'trackertracker',
     'port': '32768',
     'pool_name': 'trackertracker_pool',
-    'pool_size': 100
+    'pool_size': 20
 }
 
 # Create a connection pool

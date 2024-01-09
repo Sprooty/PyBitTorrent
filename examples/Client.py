@@ -1,7 +1,9 @@
+import logging
 from argparse import ArgumentParser
-
 from PyBitTorrent.Bittorrent import TorrentClient
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def main():
     """
@@ -16,6 +18,11 @@ def main():
     parser.add_argument('--max-peers', type=int, default=2000, help='Max connected peers')
     args = parser.parse_args()
 
+    # Log the received arguments
+    logging.info(f"Received arguments: Torrent file: {args.torrent}, Peers: {args.peers}, "
+                 f"Output directory: {args.output_directory}, Use progress bar: {args.use_progress_bar}, "
+                 f"Max peers: {args.max_peers}")
+
     # Create client from the BitTorrent Meta File
     torrent_client = TorrentClient(torrent=args.torrent, max_peers=args.max_peers,
                                    use_progress_bar=args.use_progress_bar, peers_file=args.peers,
@@ -23,7 +30,6 @@ def main():
 
     # Start downloading the file
     torrent_client.start()
-
 
 if __name__ == '__main__':
     main()
