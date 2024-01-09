@@ -3,21 +3,30 @@ import subprocess
 import logging
 from glob import glob
 import time
+import platform
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Configuration
-torrent_directory = r'C:\Syncthing\Personal\Git\PyBitTorrent\examples\torrents\\'
-output_directory = r'C:\Syncthing\Personal\Git\PyBitTorrent\examples\download\\'
+# Relative path configuration
+base_path = os.path.dirname(__file__)  # Get the directory where the script is located
+torrent_directory = os.path.join(base_path, '', 'torrents')
+output_directory = os.path.join(base_path, '', 'download')
+logging.info(f"Torrent Directory is {torrent_directory}")
+logging.info(f"Output Directy is {output_directory}")
 max_instances = 20
 
 def run_torrent_client(torrent_file, output_directory):
+    # Determine the correct Python command based on the operating system
+    python_command = 'python' if platform.system() == 'Windows' else 'python3'
+
+    # Build the command with the appropriate Python command
     command = [
-        'python', 'Client.py',
+        python_command, 'Client.py',
         '--torrent', torrent_file,
         '--output-directory', output_directory
     ]
+
     logging.info(f"Starting torrent client for {torrent_file} with output directory {output_directory}")
     try:
         return subprocess.Popen(command)  # Return the process
