@@ -82,10 +82,11 @@ logging.basicConfig(level=logging.DEBUG,
 
 
 class TorrentClient:
-    def __init__(
-            self, torrent: str, max_peers: int = MAX_PEERS, use_progress_bar: bool = True, peers_file: str = None,
-            output_dir: str = '.'
-    ):
+    def __init__(self, torrent: str, max_peers: int = MAX_PEERS, use_progress_bar: bool = True, peers_file: str = None, output_dir: str = '.'):
+        # Initial setup
+        self.tracker_manager = None
+        self.initialized = False  # Flag to indicate if initialization was successful
+
         self.peer_manager: PeersManager = PeersManager(max_peers)
         self.tracker_manager: TrackerManager
         self.id: bytes = generate_peer_id()
@@ -115,21 +116,24 @@ class TorrentClient:
         print(self.torrent.file_name)
         logging.getLogger("BitTorrent").info(f"Infohash is {self.torrent.hash}")
 
-                # Before initiating the check
+        # Before initiating the check
         if check_infohash_existence:
-            logging.info(f"Checking for existence of info_hash: {self.torrent.hash}")
-
             try:
                 existing_torrent = search_infohash(self.torrent.hash)
                 if existing_torrent:
                     logging.info(f"Infohash {self.torrent.hash} already exists in the database with details: {existing_torrent}. Skipping insertion.")
-                    return  # Skip further processing or adjust as needed
+                    return  # Skip further processing
                 else:
                     logging.info(f"Infohash {self.torrent.hash} does not exist in the database. Proceeding with insertion.")
 
             except Exception as e:
                 logging.error(f"Error occurred while checking for info_hash: {e}")
+                return  # Optionally return early in case of errors
 
+        # Continue with initialization only if the early return hasn't happened
+        # ... [rest of your initialization code, including setting up trackers] ...
+
+        self.initialized = True  # Mark as successfully initialized
         self.piece_manager = DiskManager(output_dir, self.torrent)
         # ... [rest of your code for creating trackers and so on] ..
                 # create tracker for each url of tracker in the config file
@@ -156,7 +160,9 @@ class TorrentClient:
         self.number_of_pieces = len(self.pieces)
 
     def start(self):
-        # Send HTTP/UDP Requests to all Trackers, requesting for peers
+        if not self.initialized:
+            logging.error("TorrentClient instance was not fully initialized.")
+            return  # Do not proceed further
 
         if self.peers_file:
             logging.getLogger("BitTorrent").info("Reading peers from file")

@@ -77,7 +77,7 @@ def main():
     lons = [data['coords'][1] for data in country_data.values() if data['coords']]
     text = [f"{country} - {data['count']} IPs" for country, data in country_data.items() if data['coords']]
     # Calculate dot size based on the count of IPs (adjust as needed)
-    dot_sizes = [1 * (data['count'] ** 0.5) for country, data in country_data.items() if data['coords']]  # Adjust 5 or the exponent as needed
+    dot_sizes = [.6 * (data['count'] ** 0.5) for country, data in country_data.items() if data['coords']]  # Adjust 5 or the exponent as needed
 
 
     logging.info(f"Preparing plot for {len(lats)} locations.")

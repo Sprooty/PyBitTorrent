@@ -83,7 +83,7 @@ def main():
                         locationmode="country names",  # or use "ISO-3" if your country data is in ISO-3 format
                         color="Count",
                         hover_name="Country",
-                        color_continuous_scale=px.colors.sequential.Plasma)
+                        color_continuous_scale=px.colors.sequential.RdBu)
 
     # Update the layout to add map configurations and title
     fig.update_layout(
