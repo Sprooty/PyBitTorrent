@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  wireguard:
+    image: linuxserver/wireguard
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - /data/DockerConfig/wgpeer:/config
+    ports:
+      - "51820:51820/udp"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+
+  python_app:
+    build: .
+    volumes:
+      - .:/usr/src/app
+    # Add any other configurations you might need for your Python app
+
+# ... other services ...
