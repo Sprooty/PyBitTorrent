@@ -1,3 +1,8 @@
+FROM linuxserver/wireguard
+
+# Remove net.ipv4.conf.all.src_valid_mark setting from wg-quick
+RUN sed -i /net\.ipv4\.conf\.all\.src_valid_mark/d `which wg-quick`
+
 # Use an official Python 3.10 runtime as a parent image
 FROM python:3.10-slim
 
