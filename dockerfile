@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install PyBitTorrent
+RUN pip install .
 
 # Run your application
 CMD ["python3", "/usr/src/app/examples/iterator.py"]

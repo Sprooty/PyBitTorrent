@@ -14,7 +14,7 @@ torrent_directory = os.path.join(base_path, '', 'torrents')
 output_directory = os.path.join(base_path, '', 'download')
 logging.info(f"Torrent Directory is {torrent_directory}")
 logging.info(f"Output Directy is {output_directory}")
-max_instances = 1
+max_instances = 20
 
 def run_torrent_client(torrent_file, output_directory):
     # Determine the correct Python command based on the operating system
