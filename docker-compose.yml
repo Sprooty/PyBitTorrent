@@ -20,6 +20,8 @@ services:
     build: .
     volumes:
       - .:/usr/src/app
+    network_mode: service:wireguard
+    command: /bin/bash -c "/usr/src/app/check_ip.sh && python3 /usr/src/app/examples/iterator.py"
     # Add any other configurations you might need for your Python app
 
 # ... other services ...

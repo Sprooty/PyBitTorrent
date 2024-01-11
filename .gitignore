@@ -1,3 +1,15 @@
+*.torrent
+*.msi
+*.part
+*.mkv
+*.mp4
+*.exe
+*.zip
+*.rar
+*.r*
+*.0*
+/examples/download
+
 __pycache_/
 .idea/
 .idea/workspace.xml

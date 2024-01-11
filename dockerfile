@@ -7,6 +7,16 @@ WORKDIR /usr/src/app
 # Copy the current directory contents into the container at /usr/src/app
 COPY . /usr/src/app
 
+# Copy the check_ip.sh script into the container
+COPY check_ip.sh /usr/src/app/check_ip.sh
+
+# Install curl for IP checking
+RUN apt-get update && apt-get install -y curl
+
+# Copy the check_ip.sh script into the container
+COPY check_ip.sh /usr/src/app/check_ip.sh
+RUN chmod +x /usr/src/app/check_ip.sh
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     pkg-config \
