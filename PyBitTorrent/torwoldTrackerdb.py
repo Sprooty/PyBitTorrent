@@ -3,6 +3,7 @@ import mysql.connector
 from datetime import datetime
 import uuid
 from mysql.connector import pooling
+from datetime import datetime
 # # Setup basic logging
 # logging.basicConfig(level=logging.DEBUG)
 # logger = logging.getLogger(__name__)
@@ -100,11 +101,11 @@ def insert_into_torrent_ips_table(torrent_id, ip):
     connection = get_connection()
     cursor = connection.cursor()
     query = """
-    INSERT INTO Torrent_IPs (TorrentID, IP, Occurrences)
-    VALUES (%s, %s, 1)
+    INSERT INTO Torrent_IPs (TorrentID, IP, Occurrences, insertedDatetime)
+    VALUES (%s, %s, 1, %s)
     ON DUPLICATE KEY UPDATE Occurrences = Occurrences + 1
     """
-    data = (torrent_id, ip)
+    data = (torrent_id, ip, datetime.now())
     cursor.execute(query, data)
     connection.commit()
     cursor.close()

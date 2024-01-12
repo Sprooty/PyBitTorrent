@@ -1,8 +1,3 @@
-FROM linuxserver/wireguard
-
-# Remove net.ipv4.conf.all.src_valid_mark setting from wg-quick
-RUN sed -i /net\.ipv4\.conf\.all\.src_valid_mark/d `which wg-quick`
-
 # Use an official Python 3.10 runtime as a parent image
 FROM python:3.10-slim
 
@@ -12,16 +7,7 @@ WORKDIR /usr/src/app
 # Copy the current directory contents into the container at /usr/src/app
 COPY . /usr/src/app
 
-# Copy the check_ip.sh script into the container
-COPY check_ip.sh /usr/src/app/check_ip.sh
-
-# Install curl for IP checking
-RUN apt-get update && apt-get install -y curl
-
-# Copy the check_ip.sh script into the container
-COPY check_ip.sh /usr/src/app/check_ip.sh
-RUN chmod +x /usr/src/app/check_ip.sh
-
+# Install necessary packages
 RUN apt-get update && apt-get install -y \
     build-essential \
     pkg-config \
@@ -33,4 +19,3 @@ RUN pip install .
 
 # Run your application
 CMD ["python3", "/usr/src/app/examples/iterator.py"]
-

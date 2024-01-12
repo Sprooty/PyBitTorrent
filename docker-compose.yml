@@ -1,24 +1,10 @@
 version: '3.8'
 
 services:
-  wireguard:
-    image: linuxserver/wireguard
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
-    volumes:
-      - /home/sprooty/Git/wg:/config
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Australia/Sydney
-
   python_app:
     build: .
     volumes:
       - .:/usr/src/app
-    network_mode: service:wireguard
-    command: /bin/bash -c "/usr/src/app/check_ip.sh && python3 /usr/src/app/examples/iterator.py"
-    # Add any other configurations you might need for your Python app
-
-# ... other services ...
+    # Use host network if you want to run it on the host network
+    network_mode: host
+    # Rest of your configuration...
